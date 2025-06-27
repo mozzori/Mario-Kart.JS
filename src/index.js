@@ -1,18 +1,47 @@
-const player1 = {
-  NOME: "Mario",
-  VELOCIDADE: 4,
-  MANOBRABILIDADE: 3,
-  PODER: 3,
-  PONTOS: 0,
-};
-
-const player2 = {
-  NOME: "Luigi",
-  VELOCIDADE: 3,
-  MANOBRABILIDADE: 4,
-  PODER: 4,
-  PONTOS: 0,
-};
+const personagens = [
+  {
+    NOME: "Mario",
+    VELOCIDADE: 4,
+    MANOBRABILIDADE: 3,
+    PODER: 3,
+    PONTOS: 0,
+  },
+  {
+    NOME: "Luigi",
+    VELOCIDADE: 3,
+    MANOBRABILIDADE: 4,
+    PODER: 4,
+    PONTOS: 0,
+  },
+  {
+    NOME: "Peach",
+    VELOCIDADE: 3,
+    MANOBRABILIDADE: 5,
+    PODER: 2,
+    PONTOS: 0,
+  },
+  {
+    NOME: "Bowser",
+    VELOCIDADE: 2,
+    MANOBRABILIDADE: 2,
+    PODER: 6,
+    PONTOS: 0,
+  },
+  {
+    NOME: "Yoshi",
+    VELOCIDADE: 4,
+    MANOBRABILIDADE: 4,
+    PODER: 2,
+    PONTOS: 0,
+  },
+  {
+    NOME: "Donkey Kong",
+    VELOCIDADE: 3,
+    MANOBRABILIDADE: 2,
+    PODER: 5,
+    PONTOS: 0,
+  },
+];
 
 async function rollDice() {
   return Math.floor(Math.random() * 6) + 1;
@@ -118,25 +147,27 @@ async function playRaceEngine(character1, character2) {
         character2.PODER
       );
 
-      if (powerResult1 > powerResult2 && character2.PONTOS > 0) {
-        console.log(
-          `${character1.NOME} venceu o confronto! ${character2.NOME} perdeu 1 ponto 🐢`
-        );
-        character2.PONTOS--;
+      if (powerResult1 > powerResult2) {
+        if (character2.PONTOS > 0) {
+          console.log(`${character1.NOME} venceu o confronto! ${character2.NOME} perdeu 1 ponto 🐢`);
+          character2.PONTOS--;
+        } else {
+          console.log(`${character1.NOME} venceu o confronto! Mas ${character2.NOME} não tinha pontos para perder.`);
+        }
       }
 
-      if (powerResult2 > powerResult1 && character1.PONTOS > 0) {
-        console.log(
-          `${character2.NOME} venceu o confronto! ${character1.NOME} perdeu 1 ponto 🐢`
-        );
-        character1.PONTOS--;
+      if (powerResult2 > powerResult1) {
+        if (character1.PONTOS > 0) {
+          console.log(`${character2.NOME} venceu o confronto! ${character1.NOME} perdeu 1 ponto 🐢`);
+          character1.PONTOS--;
+        } else {
+          console.log(`${character2.NOME} venceu o confronto! Mas ${character1.NOME} não tinha pontos para perder.`);
+        }
       }
 
-      console.log(
-        powerResult2 === powerResult1
-          ? "Confronto empatado! Nenhum ponto foi perdido"
-          : ""
-      );
+      if (powerResult1 === powerResult2) {
+        console.log("Confronto empatado! Nenhum ponto foi perdido");
+      }
     }
 
     // verificando o vencedor
@@ -163,12 +194,62 @@ async function declareWinner(character1, character2) {
     console.log(`\n${character2.NOME} venceu a corrida! Parabéns! 🏆`);
   else console.log("A corrida terminou em empate");
 }
+// Função de escolha dos personagens (multiplayer local)
+const readline = require("readline");
+
+async function escolherPersonagens() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const perguntar = (pergunta) =>
+    new Promise((resolve) => rl.question(pergunta, resolve));
+
+  function exibirPersonagens(lista) {
+    lista.forEach((p, i) =>
+      console.log(`${i + 1} - ${p.NOME} (Velocidade: ${p.VELOCIDADE}, Manobrabilidade: ${p.MANOBRABILIDADE}, Poder: ${p.PODER})`)
+    );
+  }
+
+  console.log("\n🎮 Jogador 1, escolha seu personagem:");
+  exibirPersonagens(personagens);
+
+  let index1;
+  while (true) {
+    const resposta1 = await perguntar("Digite o número do personagem: ");
+    index1 = parseInt(resposta1) - 1;
+    if (index1 >= 0 && index1 < personagens.length) break;
+    console.log("❌ Escolha inválida. Tente novamente.");
+  }
+
+  const personagem1 = { ...personagens[index1] };
+  const restantes = personagens.filter((_, i) => i !== index1);
+
+  console.log("\n🎮 Jogador 2, escolha seu personagem:");
+  exibirPersonagens(restantes);
+
+  let index2;
+  while (true) {
+    const resposta2 = await perguntar("Digite o número do personagem: ");
+    index2 = parseInt(resposta2) - 1;
+    if (index2 >= 0 && index2 < restantes.length) break;
+    console.log("❌ Escolha inválida. Tente novamente.");
+  }
+
+  const personagem2 = { ...restantes[index2] };
+
+  rl.close();
+  return [personagem1, personagem2];
+}
 
 (async function main() {
+  const [jogador1, jogador2] = await escolherPersonagens();
+
   console.log(
-    `🏁🚨 Corrida entre ${player1.NOME} e ${player2.NOME} começando...\n`
+    `🏁🚨 Corrida entre ${jogador1.NOME} e ${jogador2.NOME} começando...\n`
   );
 
-  await playRaceEngine(player1, player2);
-  await declareWinner(player1, player2);
+  await playRaceEngine(jogador1, jogador2);
+  await declareWinner(jogador1, jogador2);
 })();
